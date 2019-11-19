@@ -23,10 +23,11 @@ class Rotor:
         self.rCharMap = [self.charMap.index(i) for i in range(alphabetNumber)]
     
     def passCharInt(self, charInt, forward=True):
+        charInt = (charInt - self.rotorIndicator) % alphabetNumber
         if forward:
-            return self.charMap[charInt]
+            return (self.charMap[charInt] + self.rotorIndicator) % alphabetNumber
         else:
-            return self.rCharMap[charInt]
+            return (self.rCharMap[charInt] + self.rotorIndicator) % alphabetNumber
 
     def rotate(self, encode=True):
         if encode:
@@ -54,13 +55,13 @@ class Enigma:
             for rotorIdx in range(self.rotorNumber):
                 rotor = self.rotors[rotorIdx]
                 if idc == 0:
-                    rotor.rotate(encode = encode)
+                    idc = rotor.rotate(encode = encode)
         else:
             idc = alphabetNumber-1
             for rotorIdx in range(self.rotorNumber):
                 rotor = self.rotors[rotorIdx]
                 if idc == alphabetNumber-1:
-                    rotor.rotate(encode = encode)
+                    idc = rotor.rotate(encode = encode)
                     
             
 
@@ -84,8 +85,6 @@ class Enigma:
     
     def decodeChar(self, char):
         buffer = ord(char) - ord('a')
-        # rotate
-        self.rotateRotor(encode=False)
 
         # forward pass
         for rotorIdx in range(self.rotorNumber-1):
@@ -96,13 +95,15 @@ class Enigma:
         for rotorIdx in range(self.rotorNumber-1, -1, -1):
             rotor = self.rotors[rotorIdx]
             buffer = rotor.passCharInt(buffer, forward=False)    
+        
+        # rotate
+        self.rotateRotor(encode=False)
 
         output = chr(buffer + ord('a'))    
         return output
 
     def encode(self, text):
         output = ''
-        print(text)
         for char in text:
             char = char.lower()
             
@@ -128,9 +129,9 @@ class Enigma:
         return output
 
 if __name__ == '__main__':
-    enigma = Enigma()
+    enigma = Enigma(3)
     text = input().strip()
-    # text = 'a'
+
     encodedText = enigma.encode( text )
     decodedText = enigma.decode( encodedText )
 
