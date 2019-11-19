@@ -3,9 +3,7 @@ import random
 # global variable
 alphabetNumber = 26
 
-
 class Rotor:
-
 
     def __init__(self, charMap = None):
 
@@ -42,8 +40,23 @@ class Enigma:
     def __init__(self, rotorNumber=3):
         self.rotorNumber = rotorNumber
         self.rotors = []
-
+        self.plugs = [None for i in range(alphabetNumber)]
         self.initialize()
+
+    def plug(self, char1, char2):
+        char1 = ord(char1) - ord('a')
+        char2 = ord(char2) - ord('a')
+        if self.plugs[char1] == None and self.plugs[char2] == None:
+            self.plugs[char1] = char2
+            self.plugs[char2] = char1
+        else:
+            raise Exception('plug is pluged')
+
+    def passPlugs(self, charInt):
+        if self.plugs[charInt] != None:
+            return self.plugs[charInt]
+        else:
+            return charInt
 
     def initialize(self):
         for i in range(self.rotorNumber):
@@ -61,12 +74,11 @@ class Enigma:
             for rotorIdx in range(self.rotorNumber):
                 rotor = self.rotors[rotorIdx]
                 if idc == alphabetNumber-1:
-                    idc = rotor.rotate(encode = encode)
-                    
-            
+                    idc = rotor.rotate(encode = encode)               
 
     def encodeChar(self, char):
         buffer = ord(char) - ord('a')
+        buffer = self.passPlugs(buffer)
         # rotate
         self.rotateRotor(encode=True)
 
@@ -80,11 +92,13 @@ class Enigma:
             rotor = self.rotors[rotorIdx]
             buffer = rotor.passCharInt(buffer, forward=False)
 
+        buffer = self.passPlugs(buffer)
         output = chr(buffer + ord('a'))
         return output
     
     def decodeChar(self, char):
         buffer = ord(char) - ord('a')
+        buffer = self.passPlugs(buffer)
 
         # forward pass
         for rotorIdx in range(self.rotorNumber-1):
@@ -99,6 +113,7 @@ class Enigma:
         # rotate
         self.rotateRotor(encode=False)
 
+        buffer = self.passPlugs(buffer)
         output = chr(buffer + ord('a'))    
         return output
 
@@ -130,6 +145,8 @@ class Enigma:
 
 if __name__ == '__main__':
     enigma = Enigma(3)
+    enigma.plug('a','b')
+
     text = input().strip()
 
     encodedText = enigma.encode( text )
